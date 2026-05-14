@@ -1,0 +1,82 @@
+*, *::before, *::after { box-sizing: border-box; }
+
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+html, body, #root {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #FAF6F0;
+}
+
+/* ── Desktop web preview: linen canvas + centered phone frame ── */
+@media (min-width: 600px) {
+  html, body {
+    overflow: auto;
+    background: #E0D5C4;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(91,42,78,0.07) 0%, transparent 55%),
+      radial-gradient(circle at 80% 70%, rgba(232,163,48,0.06) 0%, transparent 55%);
+  }
+  #root {
+    overflow: auto;
+    height: auto;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+}
+
+* { -webkit-tap-highlight-color: transparent; user-select: none; }
+input, textarea { user-select: text; }
+*::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+
+input, button, textarea, select {
+  font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes row-arrive {
+  0%   { transform: translateY(8px); opacity: 0; filter: blur(3px); }
+  60%  { filter: blur(0); }
+  100% { transform: translateY(0); opacity: 1; filter: blur(0); }
+}
+@keyframes row-tint {
+  0%   { background-color: var(--arrive-tint, transparent); }
+  100% { background-color: transparent; }
+}
+@keyframes pulse-dot {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.4); opacity: 0.6; }
+}
+@keyframes kenburns {
+  0%,100% { transform: scale(1.08) translate(-1%,-1%); }
+  50%      { transform: scale(1.18) translate(2%,1%); }
+}
+@keyframes steam-rise {
+  0%   { transform: translate(0,0) scale(0.6); opacity: 0; }
+  20%  { opacity: .5; }
+  100% { transform: translate(var(--sx,0), -180px) scale(1.4); opacity: 0; }
+}
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(120%); }
+}
+@keyframes tdk-pop {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
