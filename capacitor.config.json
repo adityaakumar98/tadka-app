@@ -1,0 +1,8 @@
+{
+  "appId": "com.tadka.app",
+  "appName": "Tadka",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  }
+}

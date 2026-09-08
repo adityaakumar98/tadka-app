@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { theme as T } from '../theme'
 
 export function Button({ children, onClick, variant = 'primary', size = 'lg', theme = T, disabled, loading, fullWidth, style: extra }) {
@@ -100,19 +101,26 @@ export function BrandBadge({ brand, chefPick, theme = T, small = false }) {
 }
 
 export function ReelTile({ recipe, theme = T, height = 180, rounded = 16, showOverlay = true, style }) {
-  const [g1, g2] = recipe.gradient
+  const [g1, g2] = recipe.gradient || ['oklch(0.55 0.18 35)', 'oklch(0.35 0.14 25)']
   return (
     <div style={{
       position: 'relative', width: '100%', height, borderRadius: rounded, overflow: 'hidden',
       background: `linear-gradient(135deg, ${g1} 0%, ${g2} 100%)`, ...style,
     }}>
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(120% 80% at 30% 20%, ${g1}cc 0%, transparent 60%),
-                     radial-gradient(80% 60% at 80% 80%, ${g2}88 0%, transparent 70%),
-                     repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 8px)`,
-        animation: 'kenburns 14s ease-in-out infinite',
-      }} />
+      {recipe.thumbnailUrl ? (
+        <img
+          src={recipe.thumbnailUrl} alt="" loading="lazy"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      ) : (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(120% 80% at 30% 20%, ${g1}cc 0%, transparent 60%),
+                       radial-gradient(80% 60% at 80% 80%, ${g2}88 0%, transparent 70%),
+                       repeating-linear-gradient(45deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 8px)`,
+          animation: 'kenburns 14s ease-in-out infinite',
+        }} />
+      )}
       {showOverlay && (
         <>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55) 100%)' }} />
@@ -136,6 +144,26 @@ export function ProductSwatch({ color, size = 56 }) {
       background: `radial-gradient(60% 60% at 35% 30%, ${color} 0%, ${color}cc 70%, ${color}99 100%)`,
       border: '1px solid rgba(0,0,0,0.06)',
     }} />
+  )
+}
+
+// Real product photo with the colour swatch as the background/fallback. When `image`
+// is falsy (mock mode) or the URL fails to load, this is just a ProductSwatch.
+export function ProductImage({ image, color, size = 56 }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <div style={{
+      position: 'relative', width: size, height: size, borderRadius: 12, flexShrink: 0,
+      overflow: 'hidden', border: '1px solid rgba(0,0,0,0.06)',
+      background: `radial-gradient(60% 60% at 35% 30%, ${color} 0%, ${color}cc 70%, ${color}99 100%)`,
+    }}>
+      {image && !failed && (
+        <img
+          src={image} alt="" loading="lazy" onError={() => setFailed(true)}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      )}
+    </div>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { theme as T } from '../theme'
 import { DATA } from '../data'
 import { TadkaLogo } from '../components/Logo'
@@ -154,15 +154,39 @@ function HeroReels({ theme, onOpen }) {
 }
 
 export default function HomeScreen({ theme = T, onPaste, onOpenChef, onOpenRecipes }) {
-  const [url, setUrl] = useState('')
+  // A Reel shared into Tadka (Android share sheet / deep link) arrives as ?shared=<url>.
+  const readShared = () => {
+    try {
+      return new URLSearchParams(window.location.search).get('shared') || ''
+    } catch {
+      return ''
+    }
+  }
+  const [url, setUrl] = useState(readShared)
+
+  const sharedHandled = useRef(false)
+  useEffect(() => {
+    if (sharedHandled.current) return
+    const shared = readShared()
+    if (!shared) return
+    sharedHandled.current = true
+    window.history.replaceState({}, '', window.location.pathname)
+    onPaste(shared)
+  }, [onPaste])
 
   const handlePasteClick = async () => {
+    try {
+      const text = await navigator.clipboard?.readText?.()
+      if (text) return setUrl(text.trim())
+    } catch {
+      /* clipboard blocked — fall back to a sample */
+    }
     setUrl('https://www.instagram.com/reel/C-yourfoodlab-paneer-butter-masala/')
   }
 
   const buildCart = () => {
     if (!url) return
-    onPaste('pbm')
+    onPaste(url)
   }
 
   const heroLines = theme.hero.lines
