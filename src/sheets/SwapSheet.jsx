@@ -1,6 +1,6 @@
 import { theme as T } from '../theme'
 import Sheet from '../components/Sheet'
-import { ProductSwatch, Icons } from '../components/UI'
+import { ProductImage, Icons } from '../components/UI'
 
 export default function SwapSheet({ theme = T, ingredient, alternatives, currentSwap, onChoose, onClose }) {
   return (
@@ -19,7 +19,7 @@ export default function SwapSheet({ theme = T, ingredient, alternatives, current
               borderRadius: 14, padding: 12,
               display: 'flex', alignItems: 'center', gap: 14,
             }}>
-              <ProductSwatch color={alt.swatch} size={52} />
+              <ProductImage image={alt.imageUrl} color={alt.swatch} size={52} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: theme.ink }}>{alt.brand}</div>

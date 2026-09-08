@@ -13,20 +13,33 @@ function SectionLabel({ theme, children }) {
   )
 }
 
-export default function OrderPlacedScreen({ theme = T, recipe, chef, total, orderId, pincode, onBack, onMyRecipes }) {
+const STAGE_FOR_MESSAGE = {
+  'order placed': 0,
+  'picking & packing': 1,
+  'out for delivery': 2,
+  'arriving': 3,
+}
+
+export default function OrderPlacedScreen({ theme = T, recipe, chef, total, orderId, pincode, tracking, onBack, onMyRecipes }) {
   const [stage, setStage] = useState(0)
   const [recipeExpanded, setRecipeExpanded] = useState(false)
 
+  // Live backend tracking wins; otherwise fall back to the scripted timeline.
+  const liveStage = tracking ? STAGE_FOR_MESSAGE[(tracking.status?.message || '').toLowerCase()] : undefined
+  const effectiveStage = liveStage ?? stage
+  const etaText = tracking?.status?.etaText || '12–14 minutes'
+
   useEffect(() => {
+    if (tracking) return
     const t1 = setTimeout(() => setStage(1), 2200)
     return () => clearTimeout(t1)
-  }, [])
+  }, [tracking])
 
   const stages = [
     { k: 'placed',  label: 'Order placed',      t: 'Just now' },
     { k: 'packing', label: 'Picking & packing', t: 'In 1 min' },
     { k: 'out',     label: 'Out for delivery',  t: '~5 min' },
-    { k: 'arrived', label: 'Arriving',          t: '12–14 min' },
+    { k: 'arrived', label: 'Arriving',          t: etaText },
   ]
 
   return (
@@ -68,7 +81,7 @@ export default function OrderPlacedScreen({ theme = T, recipe, chef, total, orde
           color: theme.ink, lineHeight: 1.1,
         }}>Order placed, chef.</h1>
         <div style={{ marginTop: 8, fontSize: 14, color: theme.ink2, lineHeight: 1.4 }}>
-          Your tadka starts in <strong style={{ color: theme.ink }}>12–14 minutes</strong>
+          Your tadka starts in <strong style={{ color: theme.ink }}>{etaText}</strong>
         </div>
 
         <div style={{
@@ -85,9 +98,9 @@ export default function OrderPlacedScreen({ theme = T, recipe, chef, total, orde
           border: `1px solid ${theme.border}`, padding: '18px 16px',
         }}>
           {stages.map((s, i) => {
-            const done = i < stage
-            const active = i === stage
-            const pending = i > stage
+            const done = i < effectiveStage
+            const active = i === effectiveStage
+            const pending = i > effectiveStage
             return (
               <div key={s.k} style={{ display: 'flex', gap: 12, paddingBottom: i < stages.length - 1 ? 12 : 0, position: 'relative' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>

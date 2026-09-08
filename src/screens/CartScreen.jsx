@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { theme as T } from '../theme'
-import { Button, BrandBadge, ProductSwatch, Icons, Stepper, RowKV } from '../components/UI'
+import { Button, BrandBadge, ProductImage, Icons, Stepper, RowKV } from '../components/UI'
 import VideoPanel from '../components/VideoPanel'
 import { scaledQty } from '../utils'
 
@@ -16,7 +16,7 @@ function IngredientRow({ theme, ing, scale, compact, divider, onSwap, onRemove }
       animation: 'row-arrive .42s cubic-bezier(.32,.72,0,1), row-tint 1.2s ease-out',
       '--arrive-tint': `${theme.accent}1a`,
     }}>
-      <ProductSwatch color={ing.swatch} size={swatchSize} />
+      <ProductImage image={ing.image} color={ing.swatch} size={swatchSize} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
           fontSize: compact ? 13.5 : 14.5, fontWeight: 500, color: theme.ink,

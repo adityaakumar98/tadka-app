@@ -1,16 +1,77 @@
-# React + Vite
+# Tadka — Watch. Tap. Cook.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Paste a cooking Reel → Tadka builds your Swiggy Instamart cart → you cook.
 
-Currently, two official plugins are available:
+Three pieces:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Piece | Path | What it is |
+|---|---|---|
+| Web app / PWA | `/` (`src/`) | React 19 + Vite. Runs standalone on mock data, or against the backend. |
+| Backend | `server/` | Node + Express. Owns the Swiggy Instamart **MCP** connection and the Reel→cart pipeline. Mock mode by default. |
+| Android app | `android/` | Capacitor wrapper of the web app. Adds the Instagram **share sheet** ("Share → Tadka"), UPI intents, notifications. |
 
-## React Compiler
+## Web app
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev            # http://localhost:3001  (mock data)
+npm run build
+npm run lint
+```
 
-## Expanding the ESLint configuration
+To run against the backend, copy `.env.example` → `.env` and set `VITE_USE_BACKEND=true`.
+With the flag off (the default) the app is entirely self-contained — no backend needed.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Backend (`server/`)
+
+```bash
+cd server
+cp .env.example .env
+npm install
+npm run dev            # http://localhost:8787
+curl localhost:8787/health   # {"ok":true,"mcp":"mock","llm":"mock"}
+```
+
+Flags (all default off — the app runs on fixtures):
+
+- **`SWIGGY_MCP_ENABLED`** — real Instamart tool calls (needs Swiggy Builders OAuth creds).
+  Off → `server/src/mcp/mock.js`, shaped like the [documented MCP responses](https://mcp.swiggy.com/builders/docs/reference/instamart).
+  Real product **photos** only appear when this is on.
+- **`VIDEO_RESOLVE_ENABLED`** — pull the real title / thumbnail / **embed player** /
+  transcript for a pasted URL. YouTube needs the `yt-dlp` binary on PATH
+  (`brew install yt-dlp` or `pipx install yt-dlp`); other URLs are fetched directly.
+- **`LLM_ENABLED`** — run Claude (`server/src/pipeline/extract.js`) to extract the ingredient
+  list from the resolved text. Needs `ANTHROPIC_API_KEY`.
+  - `VIDEO_RESOLVE_ENABLED` + `LLM_ENABLED` off → real player, **fixture** ingredient list.
+  - both on → the real thing.
+
+Sources handled: YouTube (Shorts + videos, via yt-dlp) and any recipe URL (og: tags +
+JSON-LD `Recipe`). Instagram / TikTok are not wired yet.
+
+Routes: `/recipes/parse`, `/cart/build`, `/cart`, `/cart/coupon`, `/payments/options`,
+`/payments/status`, `/checkout`, `/orders/:id/track`, `/addresses`, `/auth/swiggy/*`.
+
+## Android (Capacitor)
+
+Requires Node ≥ 22, Android Studio + SDK.
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android          # or: npm run android
+```
+
+- The share-sheet handler and deep links live in `src/hooks/useSharedIntent.js`
+  (no-op on web). Shared URLs route to `/?shared=<url>`, which `HomeScreen` runs.
+- Dev live-reload on a device: set `server.url` in `capacitor.config.json` to your
+  machine's LAN IP (e.g. `http://192.168.1.5:3001`), then `npx cap sync android`.
+- `WebFrame.jsx` (desktop phone-shell preview) and `InstallPrompt` are inert inside
+  the native WebView.
+
+## Not done yet
+
+Real Swiggy OAuth + MCP (no credentials), Instagram / TikTok source resolvers,
+audio-only transcription for caption-less videos, coupon UI, `your_go_to_items` screen,
+multi-store checkout, UPI app picker, manual ingredient entry, iOS, Play Store signing,
+FCM push backend. Session/token store is in-memory. See the PR description for the full
+follow-up list.

@@ -14,6 +14,46 @@ function fmtVidTime(seconds) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
+function EmbedPanel({ recipe, fullscreen, height, onExpand, onCollapse }) {
+  return (
+    <div style={{
+      position: 'relative', width: '100%', flexShrink: 0, background: '#000',
+      height: fullscreen ? '100%' : height,
+    }}>
+      <iframe
+        src={recipe.embedUrl + (fullscreen ? '&autoplay=1' : '')}
+        title={recipe.title || 'Recipe video'}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+        allowFullScreen
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+      />
+      {fullscreen && onCollapse && (
+        <button onClick={onCollapse} aria-label="Close" style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 5,
+          width: 36, height: 36, borderRadius: 999, border: 'none', cursor: 'pointer',
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(10px)', color: '#fff',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      )}
+      {!fullscreen && (
+        <button onClick={onExpand} aria-label="Full view" style={{
+          position: 'absolute', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          padding: '5px 12px 6px', border: 'none', cursor: 'pointer',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+          borderRadius: '12px 12px 0 0',
+          color: '#fff', fontSize: 9.5, letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600,
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+        }}>
+          <svg width="14" height="6" viewBox="0 0 14 6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"><path d="M1 1l6 4 6-4" /></svg>
+          Tap for full view
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function VideoPanel({ theme = T, recipe, mode = 'compact', onExpand, onCollapse, height = '40%' }) {
   const fullscreen = mode === 'fullscreen'
   const captions = RECIPE_CAPTIONS[recipe.id] || RECIPE_CAPTIONS.pbm
@@ -26,7 +66,7 @@ export default function VideoPanel({ theme = T, recipe, mode = 'compact', onExpa
     let raf
     const start = performance.now()
     const dur = (() => {
-      const [m, s] = recipe.reelDuration.split(':').map(Number)
+      const [m, s] = (recipe.reelDuration || '1:00').split(':').map(Number)
       return (m || 0) * 60 + (s || 0) || 60
     })()
     const tick = (now) => {
@@ -52,7 +92,19 @@ export default function VideoPanel({ theme = T, recipe, mode = 'compact', onExpa
     opacity: 0.35 + Math.random() * 0.3,
   })), [recipe.id])
 
-  const [g1, g2] = recipe.gradient
+  const [g1, g2] = recipe.gradient || ['oklch(0.55 0.18 35)', 'oklch(0.35 0.14 25)']
+
+  // Real embedded player (YouTube) — replaces the synthetic panel entirely.
+  if (recipe.embedUrl) {
+    return (
+      <EmbedPanel
+        recipe={recipe} fullscreen={fullscreen}
+        height={height} onExpand={onExpand} onCollapse={onCollapse}
+      />
+    )
+  }
+
+  const bgThumb = recipe.thumbnailUrl
 
   return (
     <div
@@ -67,14 +119,19 @@ export default function VideoPanel({ theme = T, recipe, mode = 'compact', onExpa
         flexShrink: 0,
       }}
     >
-      {/* Kenburns gradient layer */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(120% 80% at 30% 20%, ${g1}cc 0%, transparent 60%),
-                     radial-gradient(80% 60% at 80% 80%, ${g2}99 0%, transparent 70%),
-                     repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 8px)`,
-        animation: 'kenburns 9s ease-in-out infinite',
-      }} />
+      {bgThumb ? (
+        /* Real video thumbnail behind the scrim/steam overlay */
+        <img src={bgThumb} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        /* Kenburns gradient layer */
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `radial-gradient(120% 80% at 30% 20%, ${g1}cc 0%, transparent 60%),
+                       radial-gradient(80% 60% at 80% 80%, ${g2}99 0%, transparent 70%),
+                       repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 8px)`,
+          animation: 'kenburns 9s ease-in-out infinite',
+        }} />
+      )}
 
       {/* Steam particles */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
@@ -172,40 +229,46 @@ export default function VideoPanel({ theme = T, recipe, mode = 'compact', onExpa
         color: '#fff',
         pointerEvents: 'none',
       }}>
-        <div key={capIdx} style={{
-          minHeight: 24,
-          fontFamily: theme.font.display,
-          fontSize: fullscreen ? 21 : 15.5, fontStyle: 'italic',
-          lineHeight: 1.25, letterSpacing: '-0.01em',
-          color: '#fff', opacity: 0.95,
-          textShadow: '0 2px 14px rgba(0,0,0,0.6)',
-          animation: 'fade-in .35s ease-out',
-        }}>{captions[capIdx]}</div>
+        {!bgThumb && (
+          <div key={capIdx} style={{
+            minHeight: 24,
+            fontFamily: theme.font.display,
+            fontSize: fullscreen ? 21 : 15.5, fontStyle: 'italic',
+            lineHeight: 1.25, letterSpacing: '-0.01em',
+            color: '#fff', opacity: 0.95,
+            textShadow: '0 2px 14px rgba(0,0,0,0.6)',
+            animation: 'fade-in .35s ease-out',
+          }}>{captions[capIdx]}</div>
+        )}
 
         <div style={{
-          marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+          marginTop: bgThumb ? 0 : 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
           fontFamily: theme.font.mono, fontSize: 10.5, letterSpacing: '0.04em',
           opacity: 0.9,
         }}>
-          <span>{recipe.reelHandle}</span>
-          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-            {fmtVidTime(scrub * 60)} / {recipe.reelDuration}
-          </span>
+          <span>{recipe.reelHandle || recipe.chefName || ''}</span>
+          {!bgThumb && (
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {fmtVidTime(scrub * 60)} / {recipe.reelDuration}
+            </span>
+          )}
         </div>
 
-        <div style={{
-          marginTop: 6, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 999, overflow: 'hidden',
-        }}>
+        {!bgThumb && (
           <div style={{
-            height: '100%', width: `${scrub * 100}%`,
-            background: '#fff', transition: 'width 60ms linear', position: 'relative',
+            marginTop: 6, height: 2, background: 'rgba(255,255,255,0.25)', borderRadius: 999, overflow: 'hidden',
           }}>
-            <span style={{
-              position: 'absolute', right: -4, top: -3, width: 8, height: 8, borderRadius: '50%',
-              background: '#fff', boxShadow: '0 0 8px rgba(255,255,255,0.6)',
-            }} />
+            <div style={{
+              height: '100%', width: `${scrub * 100}%`,
+              background: '#fff', transition: 'width 60ms linear', position: 'relative',
+            }}>
+              <span style={{
+                position: 'absolute', right: -4, top: -3, width: 8, height: 8, borderRadius: '50%',
+                background: '#fff', boxShadow: '0 0 8px rgba(255,255,255,0.6)',
+              }} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Pull-down affordance (compact only) */}

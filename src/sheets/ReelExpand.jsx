@@ -25,8 +25,18 @@ export default function ReelExpand({ theme = T, recipe, onClose }) {
         <div style={{ width: 38 }} />
       </div>
       <div style={{ flex: 1, padding: 22, display: 'flex', alignItems: 'center' }}>
-        <div style={{ width: '100%', aspectRatio: '9/16', borderRadius: 18, overflow: 'hidden' }}>
-          <ReelTile recipe={recipe} theme={theme} height="100%" rounded={18} />
+        <div style={{ width: '100%', aspectRatio: '9/16', borderRadius: 18, overflow: 'hidden', background: '#000' }}>
+          {recipe.embedUrl ? (
+            <iframe
+              src={recipe.embedUrl + '&autoplay=1'}
+              title={recipe.title || 'Recipe video'}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              style={{ width: '100%', height: '100%', border: 0 }}
+            />
+          ) : (
+            <ReelTile recipe={recipe} theme={theme} height="100%" rounded={18} />
+          )}
         </div>
       </div>
     </div>

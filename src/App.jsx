@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { AppProvider, useApp } from './contexts/AppContext'
+import { useSharedIntent } from './hooks/useSharedIntent'
 import { DATA } from './data'
 
 import HomeScreen from './screens/HomeScreen'
@@ -77,6 +78,7 @@ function ChefRoute({ startRecipe, goHome }) {
 }
 
 function AppRoutes() {
+  useSharedIntent()
   const {
     activeRecipe, activeChef,
     servings, setServings, baseServes,
@@ -89,6 +91,7 @@ function AppRoutes() {
     placingOrder, placeOrder, orderId,
     startRecipe,
     setShowSwapFor, setShowUnmatched, setShowReelExpand,
+    trackingInfo,
   } = useApp()
 
   const itemTotal = subtotal
@@ -167,6 +170,7 @@ function AppRoutes() {
             total={totalForOrder}
             orderId={orderId}
             pincode={pincode}
+            tracking={trackingInfo}
             onBack={goHome}
             onMyRecipes={() => { toggleSaved(activeRecipe.id); navigate('/recipes') }}
           />

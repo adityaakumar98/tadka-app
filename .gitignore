@@ -22,5 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-android/
-capacitor.config.json
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Capacitor / Android — the generated project is committed; build output is not
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/local.properties
+android/.idea/
+*.keystore
+*.jks

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { theme as T } from '../theme'
-import { Button, ProductSwatch, ReelTile, Icons } from '../components/UI'
+import { Button, ProductImage, ReelTile, Icons } from '../components/UI'
 import { useAnimatedNumber } from '../contexts/AppContext'
 
 function SectionLabel({ theme, children }) {
@@ -140,7 +140,7 @@ export default function CheckoutScreen({
               borderBottom: idx < arr.length - 1 ? `1px solid ${theme.border}` : 'none',
               opacity: ing.unmatched ? 0.55 : 1,
             }}>
-              <ProductSwatch color={ing.swatch} size={36} />
+              <ProductImage image={ing.image} color={ing.swatch} size={36} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: theme.ink, lineHeight: 1.2, letterSpacing: '-0.01em' }}>
                   {ing.name}
